@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t srihari/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run srihari/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t srihari/multi-client ./client
+  - docker build -t srihari/multi-nginx ./nginx
+  - docker build -t srihari/multi-server ./server
+  - docker build -t srihari/multi-worker ./worker
+  #Login to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login - u "$DOCKER_ID" --password-stdin
+  # Take those images and push to docker hub
+  - docker push srihari/multi-client
+  - docker push srihari/multi-nging
+  - docker push srihari/multi-server
+  - docker push srihari/multi-worker
